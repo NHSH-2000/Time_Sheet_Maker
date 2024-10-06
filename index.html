@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Sheet Maker</title>
+    <link rel="stylesheet" href="https://cdn.quasar.dev/css/index.css">
+    <style>
+        .bg-gradient {
+            background: linear-gradient(to right, #e0f7fa, #e1bee7);
+        }
+        .text-blue-600 { color: #1976d2; }
+        .text-red { color: red; }
+        .text-center { text-align: center; }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+            font-size: 16px; 
+        }
+        th, td { 
+            border: 1px solid #ccc; 
+            padding: 8px; 
+            text-align: center; 
+            font-size: 16px; 
+        }
+        td:first-child { 
+            font-size: 14px; 
+        }
+        .number-cell {
+            font-size: 22px; 
+            font-weight: bold; 
+        }
+        h1 { 
+            font-size: 2.5em; 
+        }
+        .q-input {
+            margin-bottom: 10px;
+        }
+        .q-input label { 
+            font-size: 14px; 
+            display: block;
+            margin-bottom: 4px;
+        }
+        .q-input input, .q-input select { 
+            font-size: 14px; 
+            height: 28px; 
+            padding: 4px; 
+            border: 1px solid #1976d2; 
+            border-radius: 4px; 
+            width: 150px; 
+            transition: border-color 0.3s;
+        }
+        .time-input {
+            font-size: 18px; 
+            height: 40px; 
+            width: 100%; 
+        }
+        .plusHours {
+            width: 70px; 
+            font-size: 16px; 
+            height: 30px; 
+        }
+        .text-2xl { 
+            font-size: 2em; 
+        }
+        .lunchBtn, .absentBtn, .clearBtn, .pdfBtn {
+            font-size: 14px; 
+            padding: 8px 12px; 
+            margin: 5px;
+        }
+        .absent-row {
+            background-color: #ffcccc; 
+        }
+        .summary {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.11/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <div class="q-page q-pa-md bg-gradient">
+        <div class="text-center q-mb-md">
+            <img
+                alt="Vogue logo"
+                src="C:\Users\sithm\OneDrive\Desktop\quasar ekka vada\nhs_app\src\assets\VOGUE_LOGO-removebghd.png"
+                style="width: 500px; height: 200px"
+            />
+            <h1 class="text-h4 text-blue-800 q-mt-md">Time Sheet Maker</h1>
+        </div>
+
+        <form class="q-form q-mb-md" id="timeSheetForm">
+            <div class="q-input">
+                <label for="name">Name</label>
+                <input type="text" id="name" class="q-input__inner" placeholder="Enter your name" style="font-size: 18px;" />
+            </div>
+            <div class="q-input">
+                <label for="month">Month</label>
+                <select id="month" class="q-input__inner">
+                    <option value="">Select Month</option>
+                    <option value="January">January</option>
+                    <option value="February">February</option>
+                    <option value="March">March</option>
+                    <option value="April">April</option>
+                    <option value="May">May</option>
+                    <option value="June">June</option>
+                    <option value="July">July</option>
+                    <option value="August">August</option>
+                    <option value="September">September</option>
+                    <option value="October">October</option>
+                    <option value="November">November</option>
+                    <option value="December">December</option>
+                </select>
+            </div>
+        </form>
+
+        <table class="q-table q-mt-md">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Check-In 1</th>
+                    <th>Check-Out 1</th>
+                    <th>Check-In 2</th>
+                    <th>Check-Out 2</th>
+                    <th>+ Hours</th>
+                    <th>Work Hour 1</th>
+                    <th>Work Hour 2</th>
+                    <th>Lunch</th>
+                    <th>Absent</th>
+                    <th>Final Work Hour</th>
+                </tr>
+            </thead>
+            <tbody id="timeSheetBody">
+                <script>
+                    const timeSheetBody = document.getElementById('timeSheetBody');
+                    for (let i = 1; i <= 31; i++) {
+                        timeSheetBody.innerHTML += `
+                            <tr>
+                                <td>${i}</td>
+                                <td><input type="time" class="checkIn1 time-input" /></td>
+                                <td><input type="time" class="checkOut1 time-input" /></td>
+                                <td><input type="time" class="checkIn2 time-input" /></td>
+                                <td><input type="time" class="checkOut2 time-input" /></td>
+                                <td><input type="number" class="plusHours" min="0" /></td>
+                                <td class="workHour1 number-cell">0.00</td>
+                                <td class="workHour2 number-cell">0.00</td>
+                                <td>
+                                    <button type="button" class="lunchBtn" style="background-color: red; color: white;">Lunch</button>
+                                </td>
+                                <td>
+                                    <button type="button" class="absentBtn" style="background-color: green; color: white;">Present</button>
+                                </td>
+                                <td class="finalWorkHour number-cell">0.00</td>
+                            </tr>
+                        `;
+                    }
+                </script>
+            </tbody>
+        </table>
+
+        <div class="text-center text-2xl font-bold q-mt-md">
+            All Hours: <span class="text-blue-600 number-cell" id="totalHours">0.00</span>
+        </div>
+
+        <div class="summary">
+            <div>Total Days Worked: <span id="totalDays">0</span></div>
+            <div>Total Absent Days: <span id="totalAbsent">0</span></div>
+            <div>Total Lunch Days: <span id="totalLunchDays">0</span> (<span id="lunchPercentage">0%</span>)</div>
+            <div>Total No Lunch Days: <span id="totalNoLunchDays">0</span> (<span id="noLunchPercentage">0%</span>)</div>
+        </div>
+
+        <div class="text-center q-mt-md">
+            <button type="button" class="clearBtn" style="background-color: orange; color: white;">Clear All</button>
+            <button type="button" class="pdfBtn" style="background-color: blue; color: white;">Save as PDF</button>
+        </div>
+    </div>
+
+    <script>
+        function calculateWorkHour(checkIn, checkOut) {
+            if (!checkIn || !checkOut) return 0;
+            const checkInTime = new Date(`1970-01-01T${checkIn}:00`);
+            const checkOutTime = new Date(`1970-01-01T${checkOut}:00`);
+            return (checkOutTime - checkInTime) / 3600000;
+        }
+
+        function updateRow(row) {
+            const isAbsent = row.querySelector('.absentBtn').textContent === 'Absent';
+            if (isAbsent) {
+                row.classList.add('absent-row'); 
+                row.querySelector('.workHour1').textContent = '0.00';
+                row.querySelector('.workHour2').textContent = '0.00';
+                row.querySelector('.finalWorkHour').textContent = '0.00';
+                return 0;
+            } else {
+                row.classList.remove('absent-row'); 
+            }
+
+            const checkIn1 = row.querySelector('.checkIn1').value;
+            const checkOut1 = row.querySelector('.checkOut1').value;
+            const checkIn2 = row.querySelector('.checkIn2').value;
+            const checkOut2 = row.querySelector('.checkOut2').value;
+            const plusHours = parseFloat(row.querySelector('.plusHours').value) || 0;
+            const lunch = row.querySelector('.lunchBtn').textContent === 'Lunch';
+
+            const workHour1 = calculateWorkHour(checkIn1, checkOut1);
+            const workHour2 = calculateWorkHour(checkIn2, checkOut2);
+            const finalWorkHour = workHour1 + workHour2 + plusHours - (lunch ? 0.5 : 0);
+
+            row.querySelector('.workHour1').textContent = workHour1.toFixed(2);
+            row.querySelector('.workHour2').textContent = workHour2.toFixed(2);
+            row.querySelector('.finalWorkHour').textContent = finalWorkHour.toFixed(2);
+
+            return finalWorkHour;
+        }
+
+        function updateTotalHours() {
+            const rows = document.querySelectorAll('#timeSheetBody tr');
+            let totalHours = 0;
+            let totalAbsentDays = 0;
+            let totalLunchDays = 0;
+            let totalNoLunchDays = 0;
+
+            rows.forEach(row => {
+                totalHours += updateRow(row);
+                if (row.querySelector('.absentBtn').textContent === 'Absent') {
+                    totalAbsentDays++;
+                } else {
+                    const lunch = row.querySelector('.lunchBtn').textContent === 'Lunch';
+                    if (lunch) {
+                        totalLunchDays++;
+                    } else {
+                        totalNoLunchDays++;
+                    }
+                }
+            });
+
+            const totalDays = rows.length;
+            document.getElementById('totalHours').textContent = totalHours.toFixed(2);
+            document.getElementById('totalDays').textContent = totalDays - totalAbsentDays;
+            document.getElementById('totalAbsent').textContent = totalAbsentDays;
+            document.getElementById('totalLunchDays').textContent = totalLunchDays;
+            document.getElementById('totalNoLunchDays').textContent = totalNoLunchDays;
+
+            // Calculate and display percentages
+            const lunchPercentage = totalDays > 0 ? (totalLunchDays / totalDays * 100).toFixed(2) : 0;
+            const noLunchPercentage = totalDays > 0 ? (totalNoLunchDays / totalDays * 100).toFixed(2) : 0;
+
+            document.getElementById('lunchPercentage').textContent = `${lunchPercentage}%`;
+            document.getElementById('noLunchPercentage').textContent = `${noLunchPercentage}%`;
+        }
+
+        function handleKeyNavigation(event) {
+            const input = event.target;
+            const allInputs = Array.from(document.querySelectorAll('.time-input'));
+            const index = allInputs.indexOf(input);
+
+            if (event.key === 'ArrowRight' && index < allInputs.length - 1) {
+                allInputs[index + 1].focus();
+            } else if (event.key === 'ArrowLeft' && index > 0) {
+                allInputs[index - 1].focus();
+            }
+
+            if (event.key === 'Enter') {
+                const row = input.closest('tr');
+                const nextRow = row.nextElementSibling;
+
+                if (nextRow) {
+                    const nextInput = nextRow.querySelector('.time-input');
+                    if (nextInput) {
+                        nextInput.focus();
+                    }
+                }
+                event.preventDefault(); 
+            }
+        }
+
+        document.querySelector('.clearBtn').addEventListener('click', () => {
+            document.querySelectorAll('.checkIn1, .checkOut1, .checkIn2, .checkOut2, .plusHours').forEach(input => {
+                input.value = '';
+            });
+            document.querySelectorAll('.workHour1, .workHour2, .finalWorkHour').forEach(cell => {
+                cell.textContent = '0.00';
+            });
+            document.querySelectorAll('.lunchBtn').forEach(btn => {
+                btn.textContent = 'Lunch';
+                btn.style.backgroundColor = 'red';
+            });
+            document.querySelectorAll('.absentBtn').forEach(btn => {
+                btn.textContent = 'Present';
+                btn.style.backgroundColor = 'green';
+            });
+            updateTotalHours(); 
+        });
+
+        document.querySelector('.pdfBtn').addEventListener('click', () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Title
+            doc.setFontSize(20);
+            doc.text("Time Sheet Summary", 20, 20);
+
+            // Add Name and Month
+            const name = document.getElementById('name').value;
+            const month = document.getElementById('month').value;
+            doc.setFontSize(12);
+            doc.text(`Name: ${name}`, 20, 30);
+            doc.text(`Month: ${month}`, 20, 40);
+
+            // Add Summary
+            doc.text(`Total Hours: ${document.getElementById('totalHours').textContent}`, 20, 50);
+            doc.text(`Total Days Worked: ${document.getElementById('totalDays').textContent}`, 20, 60);
+            doc.text(`Total Absent Days: ${document.getElementById('totalAbsent').textContent}`, 20, 70);
+            doc.text(`Total Lunch Days: ${document.getElementById('totalLunchDays').textContent}`, 20, 80);
+            doc.text(`Total No Lunch Days: ${document.getElementById('totalNoLunchDays').textContent}`, 20, 90);
+            doc.text(`Lunch Percentage: ${document.getElementById('lunchPercentage').textContent}`, 20, 100);
+            doc.text(`No Lunch Percentage: ${document.getElementById('noLunchPercentage').textContent}`, 20, 110);
+
+            // Add Table Header
+            const headers = ["Date", "Check-In 1", "Check-Out 1", "Check-In 2", "Check-Out 2", "+ Hours", "Work Hour 1", "Work Hour 2", "Lunch", "Absent", "Final Work Hour"];
+            const pdfTable = [];
+            pdfTable.push(headers);
+
+            // Add each row of data to the PDF
+            const rows = document.querySelectorAll('#timeSheetBody tr');
+            rows.forEach(row => {
+                const rowData = Array.from(row.children).map(cell => {
+                    if (cell.querySelector('input')) {
+                        return cell.querySelector('input').value || '';
+                    }
+                    return cell.textContent;
+                });
+                pdfTable.push(rowData);
+            });
+
+            // Generate PDF table
+            doc.autoTable({
+                head: [headers],
+                body: pdfTable.slice(1),
+                startY: 130
+            });
+
+            // Save the PDF
+            doc.save("TimeSheet.pdf");
+        });
+
+        document.querySelectorAll('.time-input').forEach(input => {
+            input.addEventListener('input', updateTotalHours);
+            input.addEventListener('keydown', handleKeyNavigation);
+        });
+
+        document.querySelectorAll('.plusHours').forEach(input => {
+            input.addEventListener('input', updateTotalHours);
+        });
+
+        document.querySelectorAll('.lunchBtn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.textContent = btn.textContent === 'Lunch' ? 'No Lunch' : 'Lunch';
+                btn.style.backgroundColor = btn.textContent === 'No Lunch' ? 'green' : 'red';
+                updateTotalHours();
+            });
+        });
+
+        document.querySelectorAll('.absentBtn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const row = e.target.closest('tr');
+                if (btn.textContent === 'Present') {
+                    btn.textContent = 'Absent';
+                    btn.style.backgroundColor = 'red';
+                } else {
+                    btn.textContent = 'Present';
+                    btn.style.backgroundColor = 'green';
+                }
+                updateRow(row);
+                updateTotalHours();
+            });
+        });
+    </script>
+</body>
+</html>
